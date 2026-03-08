@@ -1,0 +1,8 @@
+/misc
+test.c
+build.bat
+cards.exe
+algotest.exe
+build/
+.vscode/settings.json
+PM_Poker_C.code-workspace
