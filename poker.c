@@ -29,6 +29,8 @@ int main(void){
     initPlayer(&player, startingChips);
     initPlayer(&Bot1,startingChips);
     initBoard(&board);
+    int numAllPlayer = 2;
+    int numActivePlayer = 2;
     int deckTop = 0; 
     int plChoice;
     printf(BLUE"SETUP END"RESET"\n\n");
@@ -55,7 +57,8 @@ int main(void){
 
     int evaluatedPlayer = evaluateMain(&playerHand,&CommunityBoard);
     int evaluatedBot1 = evaluateMain(&Bot1Hand, &CommunityBoard);
-
+    PlayerSetScore(&player, evaluatedPlayer);
+    PlayerSetScore(&Bot1, evaluatedBot1);
     char DEBUGplayerScore[64];
     snprintf(DEBUGplayerScore, sizeof(DEBUGplayerScore), "Player Hand result: %d\n", evaluatedPlayer);
     ColPrintf(DEBUGplayerScore,0);

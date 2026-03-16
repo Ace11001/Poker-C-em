@@ -26,3 +26,14 @@ void bustDetection(Player *p){
         p->active = 0;
     }
 }
+//showdown
+//inputs an array of structs(Hands)
+int getShowdown(int scores[],int playerCount){//needs to be passed an array of scores, and an integer of number of hands
+    int bestIndex = 0;
+    for(int i = 1; i<playerCount;i++){
+        if(scores[i] >scores[bestIndex]){
+            bestIndex = i;
+        }
+    }
+    return bestIndex;//doesn't handle ties!
+}

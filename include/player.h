@@ -18,4 +18,5 @@ void Player_Raise(Player *p, Board *b);
 void Player_ALLIN(Player *p, Board *b);
 void Player_Fold(Player *p, Board *b);
 void PlayerActionExec(int choice, Player *p, Board *b);
+void PlayerSetScore(Player *p, int score);
 #endif

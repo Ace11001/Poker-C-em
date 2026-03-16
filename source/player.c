@@ -72,3 +72,6 @@ void PlayerActionExec(int choice, Player *p, Board *b){
             PlayerActionExec(errorChoice,p,b);
     }
 }
+void PlayerSetScore(Player *p, int scoreInput){
+    p->score = scoreInput;
+}
