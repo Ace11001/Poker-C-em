@@ -34,7 +34,7 @@ int main(void){
     int deckTop = 0; 
     printf(BLUE"SETUP END"RESET"\n\n");
     //Dealing to Player
-    for(int i = 0; i<3; i++){
+    for(int i = 0; i<5; i++){
         dealToHand(&CommunityBoard,deck,&deckTop);
     }
     printHand(&CommunityBoard);
