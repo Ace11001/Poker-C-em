@@ -1,6 +1,6 @@
-#include "C:\Users\galje\Desktop\PM_Poker_C\include\algos.h"
-#include "C:\Users\galje\Desktop\PM_Poker_C\include\hand.h"
-#include "C:\Users\galje\Desktop\PM_Poker_C\include\evaluate.h"
+#include "algos.h"
+#include "hand.h"
+#include "evaluate.h"
 
 int ChensFormula(Hand* h) {
     const double firstStepScores[13] = {1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,6.0,7.0,8.0,10.0};
@@ -82,7 +82,6 @@ int SklanskyMalmuth(Hand *h) {
  
     int isPair   = (card1rank == card2rank);
     int isSuited = (card1suit == card2suit);
-    int gap      = card1rank - card2rank; // always >= 0
     // Group 1: AA, AKs, KK, QQ, JJ
     if ((isPair && card1rank >= 9) ||
         (isSuited && card1rank == 12 && card2rank == 11)) {
@@ -171,4 +170,108 @@ int SklanskyMalmuth(Hand *h) {
     // Group 9: everything else
     return 9;
 }
+int BoardTexture(Hand* board){
+    //printf("BoardTexture analysis:\n");
+    int rankCount[13] = {0};
+    for(int i = 0; i < 5; i++) {
+        int rank = board->cards[i].rank;
+        rankCount[rank]++;
+    }
+    int suitCount[4]={0};
+    for(int i = 0; i < 5; i++){
+        int suit = board->cards[i].suit;
+        suitCount[suit]++;
+    }
 
+    /*debug print freq
+    printf("Suit occurences:\n|C|S|H|D|\n");
+    for(int i = 0; i<4;i++){
+        printf("|%d",suitCount[i]);
+    }
+    printf("|\n");
+    printf("Rank occurences:\n");
+    printf("| 0  1  2  3  4  5  6  7  8  9 10 11 12|\n");
+    printf("| 2| 3| 4| 5| 6| 7| 8| 9|10| J| Q| K| A|\n");
+    for(int i = 0; i < 13; i++){
+        printf("|%-2d",rankCount[i]);
+    }
+    printf("|\n");
+    end of debug1*/
+
+    int maxSuitFreq = 1;
+    int maxSuitIndex = 0;
+    for(int i = 0; i < 4; i++){
+        if(suitCount[i]>maxSuitFreq){
+            maxSuitFreq=suitCount[i];
+            maxSuitIndex = i;
+        }
+    }//if there are 4 cards with 2 pairs of the same suit we neglect the correct index
+    int pairs=0,threes=0,fours=0,highrank=0;
+    for(int i=0; i < 13; i++){
+        if(rankCount[i]==2)pairs++;
+        if(rankCount[i]==3)threes++;
+        if(rankCount[i]==4)fours++;
+        if(rankCount[i]>0 && i>highrank)highrank=i;
+    }
+    int gapScore=0;
+    int gapRanks[5];
+    for(int i = 0; i < 5; i++){
+        gapRanks[i] = board->cards[i].rank;
+    }
+    for(int i = 0; i < 4; i++){//sort
+        for(int j = 0; j < 4-i; j++){
+            if(gapRanks[j]>gapRanks[j+1]){
+                int gapTemp = gapRanks[j];
+                gapRanks[j]=gapRanks[j+1];
+                gapRanks[j+1]=gapTemp; 
+            }
+        }
+    }
+    int uniqueRanks[5],uniqueCount=0;
+    uniqueRanks[0]=gapRanks[0];
+    for(int i = 1; i < 5; i++){
+        if(gapRanks[i]!=uniqueRanks[i]){
+            uniqueRanks[++uniqueCount]=gapRanks[i];
+        }
+    }
+    float avgGap;
+    if(uniqueCount>=2){
+        int totalGap = 0;
+        for(int i = 0; i < uniqueCount-1; i++){
+            totalGap += uniqueRanks[i+1] - uniqueRanks[i];
+        }
+        avgGap = (float)totalGap/(uniqueCount-1);
+        if(avgGap <=1.0f)gapScore=3;
+        else if(avgGap<=1.5f)gapScore=2;
+        else if(avgGap<=2.0f)gapScore=2;
+        else gapScore=0;
+    }
+    //printf("|maxSuitFreq:%d|maxSuitIndex:%d|\n",maxSuitFreq,maxSuitIndex);
+    //printf("\n\n");
+    //printf("4Kind Count:%d|3Kind Count:%d|pair Count:%d|highcard Index:%d|\n",fours,threes,pairs,highrank);
+    int FlushScore;//Higher - More chance other players complete a Flush
+    switch(maxSuitFreq){
+            case 5:
+                FlushScore = 3;//auto flush
+                break;
+            case 4:
+                FlushScore = 2;//high likelyhood of flush
+                break;
+            case 3:
+                FlushScore = 1;//small chance of flush
+                break;
+            default:
+                FlushScore = 0;//No chance for flush
+                break;
+        }
+    //printf("FlushScore:%d\n",FlushScore);
+    //printf("Gap Score:%d| Avg Gap Score:%.1f\n",gapScore, avgGap);
+    int textureScore = FlushScore + gapScore + pairs + (threes*2);
+    return textureScore;
+    /*
+    Texture 0-2:   "DRY"    
+    Texture 3-5:   "MEDIUM"   
+    Texture 6-8:   "WET"      
+    Texture 9-12:  "WETTEST"   
+    */
+}

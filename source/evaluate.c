@@ -42,18 +42,18 @@ void permutateCards(Hand* hand1, Hand* boardhand, Hand5 out[MAX_COMBINATIONS]) {
         combo++;
     }
 }
-static void buildFreqMap(Hand5* hand, int freq[13]){
+void buildFreqMap(Hand5* hand, int freq[13]){
     for(int i = 0; i < 13; i++) freq[i] = 0;
     for(int i = 0; i < COMBO_SIZE; i++) freq[hand->cards[i].rank]++;
 }
-static int isFlush(Hand5* hand){
+int isFlush(Hand5* hand){
     int suit = hand->cards[0].suit;
     for(int i = 1; i < COMBO_SIZE; i++){
         if(hand->cards[i].suit != suit)return 0;//False
     }
     return 1;//True
 }
-static int isStraight(Hand5* hand){
+int isStraight(Hand5* hand){
     int ranks[COMBO_SIZE];
     for(int i = 0; i < COMBO_SIZE; i++)
         ranks[i] = hand->cards[i].rank;
