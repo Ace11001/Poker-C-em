@@ -5,6 +5,7 @@
 
 void initBoard(Board *b){
     b->pot = 0;
+    b->minBet = 5;
     b->phase = 0;
     b->AllInStatus = 0;
     b->AllInSize = 0;

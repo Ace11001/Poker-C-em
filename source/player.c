@@ -3,12 +3,27 @@
 #include "board.h"
 #include "textColor.h"
 
-void initPlayer(Player *p, int startingChips){
+void initPlayer(Player *p, int startingChips, char* name){
+    p->name = name;
     p->chips = startingChips;
     p->bet = 0;
     p->folded = 0;
     p->score = 0;
     p->active=1;//player is "alive"
+}
+void DebugPrintPlayer(Player *p){
+    printf(RED);
+    printf("\nDEBUG %s\n",p->name);
+    printf(RESET);
+    printf(" >%s.chips:%d\n",p->name,p->chips);
+    printf(" >%s.bet:%d\n",p->name, p->bet);
+    printf(" >%s.folded:%d\n",p->name,p->folded);
+    printf(" >%s.score:%d\n",p->name, p->score);
+    printf(" >%s.active:%d\n",p->name, p->active);
+}
+void playerInitBet(Player *p, Board *b){
+    int initBet = b->minBet;
+    p->bet=initBet;
 }
 int playerAction(){
     int choice;
@@ -24,7 +39,7 @@ int playerAction(){
 }
 void Player_Call_Check(Player *p, Board *b){
     placeInPot(p, b);
-    printf("Player's move: Call/Check\n");
+    printf("%s's move: Call/Check\n",p->name);
 }
 void Player_Raise(Player *p,Board *b){
     int currPot = b->pot;
@@ -33,13 +48,15 @@ void Player_Raise(Player *p,Board *b){
     printf("Current information:\n");
     printf("  >Current Pot:%-4d\n",currPot);
     printf("  >Your current bet:%-4d\n",playerBet);
+    printf("  >Current minimal bet:%d\n",b->minBet);
     printf(">Enter the amount you want to raise:");
     scanf("%d",&playerRaiseAmount);
     p->bet += playerRaiseAmount;
     placeInPot(p,b);
+    printf("%s raises %d\n",p->name,playerRaiseAmount);
 }
 void Player_ALLIN(Player *p, Board *b){
-    printf("Player goes All-In!!!\n");
+    printf("%s goes All-In!!!\n",p->name);
     int AllInSize = p->chips;
     p->bet = p->chips;
     p->chips = 0;
@@ -48,7 +65,7 @@ void Player_ALLIN(Player *p, Board *b){
     b->AllInSize = AllInSize;
 }
 void Player_Fold(Player *p,Board *b){
-    printf("Player Folded!!!\n");
+    printf("&s Folded!!!\n",p->name);
     p->folded = 1;
     placeInPot(p,b);
 }

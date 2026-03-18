@@ -4,6 +4,7 @@
 typedef struct Board Board;
 
 typedef struct Player{
+    char* name;
     int chips;
     int bet;
     int folded; //0-active, 1-folded
@@ -11,7 +12,9 @@ typedef struct Player{
     int active;
 } Player;
 
-void initPlayer(Player *p, int startingChips);
+void initPlayer(Player *p, int startingChips, char* name);
+void DebugPrintPlayer(Player *p);
+void playerInitBet(Player *p, Board *b);
 int playerAction();
 void Player_Call_Check(Player *p, Board *b);
 void Player_Raise(Player *p, Board *b);

@@ -4,6 +4,7 @@ typedef struct Player Player;
 
 typedef struct Board{
     int pot;
+    int minBet;
     int phase;//0-preflop|1-flop|2-turn|3-river
     int AllInStatus; //0-not active 1-active
     int AllInSize; //sizeof All-In bet
