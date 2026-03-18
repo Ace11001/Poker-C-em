@@ -277,16 +277,11 @@ int BoardTexture(Hand* board){
 }
 int gapScoreLen(Hand* board, int numOfCards) {
     if (numOfCards < 2) return 0;
-    
     int gapScore = 0;
     int gapRanks[5];
-    
-    // Copy ranks
     for(int i = 0; i < numOfCards; i++) {
         gapRanks[i] = board->cards[i].rank;
     }
-    
-    // Bubble sort
     for(int i = 0; i < numOfCards-1; i++) {
         for(int j = 0; j < numOfCards-1-i; j++) {
             if(gapRanks[j] > gapRanks[j+1]) {
@@ -296,21 +291,15 @@ int gapScoreLen(Hand* board, int numOfCards) {
             }
         }
     }
-    
-    // SIMPLIFIED UNIQUE COUNT - no bugs
-    int uniqueCount = 1;  // Start with first card
+    int uniqueCount = 1;
     int uniqueRanks[5];
     uniqueRanks[0] = gapRanks[0];
-    
     for(int i = 1; i < numOfCards; i++) {
-        // Check if different from LAST unique rank
         if(gapRanks[i] != uniqueRanks[uniqueCount-1]) {
             uniqueRanks[uniqueCount] = gapRanks[i];
             uniqueCount++;
         }
     }
-    
-    // Gap calculation
     if(uniqueCount >= 2) {
         int totalGap = 0;
         for(int i = 0; i < uniqueCount-1; i++) {
@@ -319,14 +308,12 @@ int gapScoreLen(Hand* board, int numOfCards) {
         float avgGap = (float)totalGap / (uniqueCount-1);
         
         printf("DEBUG: uniqueCount=%d, totalGap=%d, avgGap=%.2f\n", 
-               uniqueCount, totalGap, avgGap);  // ADD THIS
-        
+               uniqueCount, totalGap, avgGap);        
         if(avgGap <= 1.0f) gapScore = 3;
         else if(avgGap <= 1.5f) gapScore = 2;
         else if(avgGap <= 2.0f) gapScore = 1;
         else gapScore = 0;
     }
-    
-    printf("FINAL gapScore=%d\n", gapScore);  // ADD THIS
+    printf("FINAL gapScore=%d\n", gapScore); 
     return gapScore;
 }
