@@ -65,7 +65,7 @@ void Player_ALLIN(Player *p, Board *b){
     b->AllInSize = AllInSize;
 }
 void Player_Fold(Player *p,Board *b){
-    printf("&s Folded!!!\n",p->name);
+    printf("%s Folded!!!\n",p->name);
     p->folded = 1;
     placeInPot(p,b);
 }
