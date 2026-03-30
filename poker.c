@@ -14,7 +14,6 @@
 int main(void){
     //Init
     printf(BLUE"SETUP START"RESET"\n");
-    printf(BLUE"SETUP START"RESET"\n");
     srand(time(NULL));
     createDeck(deck);
     shuffleDeck(deck);
@@ -131,16 +130,24 @@ int main(void){
     }
     if(bestPlayerId == 0){
         printf("Player Wins!!!\n");
-        printf("Debug player chips%d\n",game.player.chips);
+        printf("  Debug player chips%d\n",game.player.chips);
         payOutPot(&game.board, &game.player);
-        printf("Debug player chips%d\n",game.player.chips);
+        printf("  Debug player chips%d\n",game.player.chips);
     }
     else{
         printf("Bot%d Wins!!!\n",bestPlayerId);
-        printf("Debug bot%d chips%d",bestPlayerId-1,game.player.chips);
+        printf("  Debug bot%d chips%d\n",bestPlayerId,game.bots[bestPlayerId-1].chips);
         payOutPot(&game.board, &game.bots[bestPlayerId-1]);
-        printf("Debug bot%d chips%d",bestPlayerId-1,game.player.chips);
+        printf("  Debug bot%d chips%d\n",bestPlayerId,game.bots[bestPlayerId-1].chips);
     }
-
+    int chip_counter_max = 0;
+    printf("sanity check\n");
+    printf("Player Chips%d|",game.player.chips);
+    chip_counter_max += game.player.chips;
+    for(int i = 0; i<5; i++){
+        printf("Bot%d Chips%d|",i+1, game.bots[i].chips);
+        chip_counter_max += game.bots[i].chips;
+    }
+    printf("ChipCounter:%d\n",chip_counter_max);
     return 0;
 }
