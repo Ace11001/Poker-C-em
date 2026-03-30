@@ -9,6 +9,7 @@ void initBoard(Board *b){
     b->phase = 0;
     b->AllInStatus = 0;
     b->AllInSize = 0;
+    b->communityCount = 0;
 }
 void payOutPot(Board *b, Player *p){
     int transfer = b->pot;

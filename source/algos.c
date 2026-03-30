@@ -177,19 +177,18 @@ int SklanskyMalmuth(Hand *h) {
     // Group 9: everything else
     return 1;
 }
-int BoardTexture(Hand* board){
-    //printf("BoardTexture analysis:\n");
+int BoardTexture(Hand* board, int communityCount){
     int rankCount[13] = {0};
-    for(int i = 0; i < 5; i++) {
+    int boardCount = communityCount;
+    for(int i = 0; i < boardCount; i++) {
         int rank = board->cards[i].rank;
         rankCount[rank]++;
     }
-    int suitCount[4]={0};
-    for(int i = 0; i < 5; i++){
+    int suitCount[4] = {0};
+    for(int i = 0; i < boardCount; i++) {
         int suit = board->cards[i].suit;
         suitCount[suit]++;
-    }
-
+    }   
     /*debug print freq
     printf("Suit occurences:\n|C|S|H|D|\n");
     for(int i = 0; i<4;i++){
@@ -354,59 +353,102 @@ void bot_PreFlop(GAME *g, int botIndex){
             }else{
                 g->bots[botIndex].bet = g->board.minBet;
                 printf("Bot%d calls\n",1+botIndex);
+                placeInPot(&g->bots[botIndex], &g->board);
                 return;
             }
         } else if(score < 0.30){
             //call
             g->bots[botIndex].bet = g->board.minBet;
             printf("Bot%d calls\n",botIndex+1);
+            placeInPot(&g->bots[botIndex], &g->board);
             return;
         } else if(score < 0.55){
             //raise 3 bet
             g->bots[botIndex].bet = 6; //magic number, fix later
+            g->board.minBet = g->bots[botIndex].bet;
             printf("Bot%d raises %d\n",botIndex+1,g->bots[botIndex].bet);
+            placeInPot(&g->bots[botIndex], &g->board);
             return;
         } else{
             //raise 4 bet
             g->bots[botIndex].bet = 12; //magic number, fix later
+            g->board.minBet = g->bots[botIndex].bet;
             printf("Bot%d raises %d\n",botIndex+1,g->bots[botIndex].bet);
+            placeInPot(&g->bots[botIndex], &g->board);
             return;
         }
     }else{return;}
 }
-void bot_Flop(GAME *g, int botIndex){
+void bot_Flop(GAME *g, int botIndex) {
+    int botId = botIndex + 1;
     int Astatus = g->bots[botIndex].active;
     int Fstatus = g->bots[botIndex].folded;
-    if( Astatus == 1 && Fstatus == 0){
-        int chen = ChensFormula(&g->botHands[botIndex]); //higher is better
-        int SklMal = SklanskyMalmuth(&g->botHands[botIndex]); //higher is better
-        int gap = gapScoreLen(&g->botHands[botIndex], 2); //Lower is better
-        //Normalise scores
-        double chen_norm = (chen-1) / 21.0;
-        double SklMal_norm = (SklMal-1) / 8.0;
-        double gap_norm = gap / 3.0;
-        //weights for scoring
-        double weight1 = 0.4;
-        double weight2 = 0.4;
-        double weight3 = 0.2;
-        double scorePreFlop = weight1 * chen_norm + weight2 * SklMal_norm + weight3 * gap_norm;
-        int texture = BoardTexture(&g->board);
-        double texture_norm = texture / 12.0;
-        double scoreFlop = 0.7 * scorePreFlop + 0.3 * (1.0 - texture_norm);
+    if (Astatus != 1 || Fstatus == 1) {
+        return;
+    }
 
-        int potSize = g->board.pot;
-        int minBet = g->board.minBet;
-        int otherPlayerChips;
-        for(int i = 0; i<5; i++){
-            otherPlayerChips += g->bots[i].chips;
+    // Safety: flop dealt?
+    if (g->board.communityCount < 3) {
+        printf("Bot%d: No flop\n", botId);
+        return;
+    }
+
+    int chen = ChensFormula(&g->botHands[botIndex]);
+    int SklMal = SklanskyMalmuth(&g->botHands[botIndex]);
+    int gap = gapScoreLen(&g->botHands[botIndex], 2);
+    
+    // Normalize (guards prevent NaN)
+    double chen_norm = (chen > 0 && chen <= 22) ? (chen - 1) / 21.0 : 0.0;
+    double SklMal_norm = (SklMal > 0 && SklMal <= 9) ? (SklMal - 1) / 8.0 : 0.0;
+    double gap_norm = (gap >= 0 && gap <= 3) ? gap / 3.0 : 1.0;
+    
+    double scorePreFlop = 0.4 * chen_norm + 0.4 * SklMal_norm + 0.2 * gap_norm;
+    int texture = BoardTexture(&g->boardHand, g->board.communityCount);
+    double texture_norm = (texture >= 0 && texture <= 12) ? texture / 12.0 : 0.5;
+    double scoreFlop = 0.7 * scorePreFlop + 0.3 * (1.0 - texture_norm);
+    
+    printf("Bot%d Flop score: %.6f (chen=%.2f skl=%.2f tex=%.2f)\n", 
+           botId, scoreFlop, chen_norm, SklMal_norm, texture_norm);
+    fflush(stdout);
+
+    // Chips status (fixed init)
+    int otherChips = g->player.chips;
+    for (int i = 0; i < 5; i++) {
+        otherChips += g->bots[i].chips;
+    }
+    otherChips -= g->bots[botIndex].chips;
+    double chipAvg = (g->numberOfPlayers > 0) ? otherChips / (double)g->numberOfPlayers : 0;
+    int chipsStatus = (g->bots[botIndex].chips > chipAvg) ? 1 : 0;
+
+    int minBet = g->board.minBet;  // Use g->board (your struct)
+    int raise3x = minBet * 3;
+    if (raise3x < 6) raise3x = 6;
+
+    if (scoreFlop < 0.25) {
+        g->bots[botIndex].folded = 1;
+        printf("Bot%d folds\n", botId);
+    } else if (scoreFlop < 0.35) {
+        if (minBet > 2) {
+            g->bots[botIndex].folded = 1;
+            printf("Bot%d folds to raise\n", botId);
+        } else {
+            g->bots[botIndex].bet = minBet;
+            printf("Bot%d checks\n", botId);  // minBet=0 usually
+            placeInPot(&g->bots[botIndex], &g->board);
         }
-        otherPlayerChips += g->player.chips;
-        otherPlayerChips -= g->bots[botIndex].chips;
-        double chipAvg = otherPlayerChips/(g->numberOfPlayers);
-        int chipsStatus = 0;//1 if has more chips than average chips of other players, else 0
-        if(chipAvg < g->bots[botIndex].chips){
-            chipsStatus = 1;
-        }
-        //add decision tree, fine tune and test!
-    }else{return;}
+    } else if (scoreFlop < 0.45) {
+        g->bots[botIndex].bet = minBet;
+        printf("Bot%d calls %d\n", botId, minBet);
+        placeInPot(&g->bots[botIndex], &g->board);
+    } else if (scoreFlop < 0.55 || chipsStatus == 1) {
+        g->bots[botIndex].bet = raise3x;
+        g->board.minBet = raise3x;
+        printf("Bot%d 3-bets to %d\n", botId, raise3x);
+        placeInPot(&g->bots[botIndex], &g->board);
+    } else {
+        g->bots[botIndex].bet = g->bots[botIndex].chips;  // All-in strong
+        printf("Bot%d shoves %d\n", botId, g->bots[botIndex].bet);
+        placeInPot(&g->bots[botIndex], &g->board);
+    }
+    fflush(stdout);
 }

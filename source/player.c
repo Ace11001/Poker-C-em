@@ -38,6 +38,7 @@ int playerAction(){
     return choice;
 }
 void Player_Call_Check(Player *p, Board *b){
+    p->bet = b->minBet;
     placeInPot(p, b);
     printf("%s's move: Call/Check\n",p->name);
 }
@@ -53,14 +54,15 @@ void Player_Raise(Player *p,Board *b){
     scanf("%d",&playerRaiseAmount);
     p->bet += playerRaiseAmount;
     placeInPot(p,b);
+    b->minBet = playerRaiseAmount;
     printf("%s raises %d\n",p->name,playerRaiseAmount);
 }
 void Player_ALLIN(Player *p, Board *b){
     printf("%s goes All-In!!!\n",p->name);
     int AllInSize = p->chips;
-    p->bet = p->chips;
-    p->chips = 0;
+    p->bet = AllInSize;
     placeInPot(p,b);
+    p->chips = 0;
     b->AllInStatus=1;
     b->AllInSize = AllInSize;
 }
