@@ -4,9 +4,11 @@
 #include "deck.h"
 #include "hand.h"
 #include "game.h"
+#include "game.h"
 
 int ChensFormula(Hand* h);
 int SklanskyMalmuth(Hand *h);
+int BoardTexture(Hand* board, int communityCount);
 int BoardTexture(Hand* board, int communityCount);
 int gapScoreLen(Hand* board, int numOfCards);
 void bot_PreFlop(GAME *g, int botIndex);

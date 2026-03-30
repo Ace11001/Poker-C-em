@@ -9,9 +9,11 @@
 #include "algos.h"
 #include "textColor.h"
 #include "game.h"
+#include "game.h"
 
 int main(void){
     //Init
+    printf(BLUE"SETUP START"RESET"\n");
     printf(BLUE"SETUP START"RESET"\n");
     srand(time(NULL));
     createDeck(deck);
