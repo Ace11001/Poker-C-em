@@ -2,7 +2,6 @@
 #include "hand.h"
 #include "evaluate.h"
 #include "game.h"
-#include "game.h"
 
 int ChensFormula(Hand* h) {
     const double firstStepScores[13] = {1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,6.0,7.0,8.0,10.0};
@@ -88,7 +87,6 @@ int SklanskyMalmuth(Hand *h) {
     if ((isPair && card1rank >= 9) ||
         (isSuited && card1rank == 12 && card2rank == 11)) {
         return 9;
-        return 9;
     }
     // Group 2: AK, AQs, AJs, KQs, TT
     if ((card1rank == 12 && card2rank == 11 && !isSuited) ||
@@ -96,7 +94,6 @@ int SklanskyMalmuth(Hand *h) {
         (isSuited && card1rank == 12 && card2rank == 9)  ||
         (isSuited && card1rank == 11 && card2rank == 10) ||
         (isPair && card1rank == 8)) {
-        return 8;
         return 8;
     }
     // Group 3: AQ, ATs, KJs, QJs, JTs, 99
@@ -106,7 +103,6 @@ int SklanskyMalmuth(Hand *h) {
         (isSuited && card1rank == 10 && card2rank == 9)   ||
         (isSuited && card1rank == 9  && card2rank == 8)   ||
         (isPair && card1rank == 7)) {
-        return 7;
         return 7;
     }
     // Group 4: AJ, KQ, KTs, QTs, J9s, T9s, 98s, 88
@@ -118,7 +114,6 @@ int SklanskyMalmuth(Hand *h) {
         (isSuited && card1rank == 8  && card2rank == 7)   ||
         (isSuited && card1rank == 7  && card2rank == 6)   ||
         (isPair && card1rank == 6)) {
-        return 6;
         return 6;
     }
     // Group 5: A9s-A2s, KJ, QJ, JT, Q9s, T8s, 97s, 87s, 77, 76s, 66
@@ -145,7 +140,6 @@ int SklanskyMalmuth(Hand *h) {
         (isPair && card1rank == 3)                        ||
         (isSuited && card1rank == 3  && card2rank == 2)) {
         return 4;
-        return 4;
     }
     // Group 7: K9s-K2s, J9, T9, 98, 64s, 53s, 44, 43s, 33, 22
     if ((isSuited && card1rank == 11 && card2rank >= 0 && card2rank <= 7) ||
@@ -158,7 +152,6 @@ int SklanskyMalmuth(Hand *h) {
         (isSuited && card1rank == 2  && card2rank == 1)   ||
         (isPair && card1rank == 1)                        ||
         (isPair && card1rank == 0)) {
-        return 3;
         return 3;
     }
     // Group 8: A9, K9, Q9, J8, J7s, T8, 96s, 87, 85s, 76, 74s, 65, 54, 42s, 32s
@@ -180,23 +173,12 @@ int SklanskyMalmuth(Hand *h) {
         (card1rank == 11 && card2rank >= 0 && card2rank <= 7 && isSuited) ||
         (card1rank == 10 && card2rank >= 0 && card2rank <= 7 && isSuited)) {
         return 3;
-        return 2;
-    }
-    // Very weak but still “better than total trash”: A2s–A9s, K2s–K9s, Q2s–Q9s, etc.
-    if ((card1rank == 12 && card2rank >= 0 && card2rank <= 7 && isSuited) ||
-        (card1rank == 11 && card2rank >= 0 && card2rank <= 7 && isSuited) ||
-        (card1rank == 10 && card2rank >= 0 && card2rank <= 7 && isSuited)) {
-        return 3;
     }
     // Group 9: everything else
     return 1;
-    return 1;
 }
 int BoardTexture(Hand* board, int communityCount){
-int BoardTexture(Hand* board, int communityCount){
     int rankCount[13] = {0};
-    int boardCount = communityCount;
-    for(int i = 0; i < boardCount; i++) {
     int boardCount = communityCount;
     for(int i = 0; i < boardCount; i++) {
         int rank = board->cards[i].rank;
@@ -204,11 +186,8 @@ int BoardTexture(Hand* board, int communityCount){
     }
     int suitCount[4] = {0};
     for(int i = 0; i < boardCount; i++) {
-    int suitCount[4] = {0};
-    for(int i = 0; i < boardCount; i++) {
         int suit = board->cards[i].suit;
         suitCount[suit]++;
-    }   
     }   
     /*debug print freq
     printf("Suit occurences:\n|C|S|H|D|\n");
