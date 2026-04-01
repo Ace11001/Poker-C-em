@@ -22,7 +22,18 @@ int main(void){
     GAME game;
     initGame(&game);
     printf(BLUE"SETUP END"RESET"\n\n");
+    sizeDemo();
+    showdownScreen();
     initPlayer(&game.player, game.startingChips, "Player");
+    dealToHand(&game.boardHand, deck, &game.deckTop);
+    dealToHand(&game.boardHand, deck, &game.deckTop);
+    dealToHand(&game.boardHand, deck, &game.deckTop);
+    dealToHand(&game.boardHand, deck, &game.deckTop);
+    dealToHand(&game.boardHand, deck, &game.deckTop);
+
+    dealToHand(&game.playerHand, deck, &game.deckTop);
+    dealToHand(&game.playerHand, deck, &game.deckTop);
+
     drawFrame(&game);
     
     return 0;

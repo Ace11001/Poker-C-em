@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "game.h"
+#include "evaluate.h"
 
 #define BLUE "\033[34m" 
 #define GRAY "\033[90m" 
@@ -18,6 +19,58 @@
 void gotoxy(int x,int y){
     printf("%c[%d;%df",0x1B,y,x);
 }
+void sizeDemo(){
+    system("cls");
+    gotoxy(1,1);
+    for(int i = 0; i<75; i++){
+        printf("#");
+    }
+    for(int i = 0; i < 22; i++){
+        gotoxy(1,2+i);
+        printf("#");
+        gotoxy(75, 2+i);
+        printf("#");
+    }
+    gotoxy(1,24);
+    for(int i = 0; i<74; i++){
+        printf("#");
+    }
+    //instructions
+    gotoxy(4,3);
+    printf("Poker - Texas hold'em");
+    gotoxy(4,4);
+    printf("The # border is the size of the game user interface");
+    gotoxy(4,5);
+    printf("Resize the terminal window to see the # signs");
+    gotoxy(4,7);
+    printf("Enjoy!");
+    gotoxy(4,9);
+    system("pause");
+}
+
+void showdownScreen(){
+    //74x25
+    /**
+    *       ______                 __                  __  __  __
+    *      / __/ /  ___ _    _____/ /__ _    _____    / / / / / /
+    *     _\ \/ _ \/ _ \ |/|/ / _  / _ \ |/|/ / _ \  /_/ /_/ /_/ 
+    *    /___/_//_/\___/__,__/\_,_/\___/__,__/_//_/ (_) (_) (_)  
+    *                                                            
+ */
+    gotoxy(5,6);
+    printf(YELLOW"        ______                 __                  __  __  __");
+    gotoxy(5,7);
+    printf("       / __/ /  ___ _    _____/ /__ _    _____    / / / / / /");
+    gotoxy(5,8);
+    printf("      _\\ \\/ _ \\/ _ \\ |/|/ / _  / _ \\ |/|/ / _ \\  /_/ /_/ /_/ ");
+    gotoxy(5,9);
+    printf("     /___/_//_/\\___/__,__/\\_,_/\\___/__,__/_//_/ (_) (_) (_)  ");
+    gotoxy(5,10);
+    printf("                                                              "RESET);
+    gotoxy(5,12);
+    system("pause");
+}
+
 void botWindow(int xCord, int yCord, char* botName, int chips, int bet, int colIndex, int foldedStatus, int activeStatus){
 if(activeStatus == 1){
     gotoxy(xCord, yCord);
@@ -111,26 +164,44 @@ void drawFrame(GAME *g){
     for(int i = 0; i < 74; i ++){
         printf("─");
     }
-    //Community Area
-    gotoxy(1,7);
-    printf("Community Cards");
     gotoxy(1,8);
+    for(int i = 0; i < 74; i ++){
+        printf("─");
+    }
+    gotoxy(1,7);
+    printf("Status: "YELLOW"%s"RESET, "Hello world"); //<==Add status messages
+    //Community Area
+    gotoxy(1,9);
+    printf("Community Cards");
+    gotoxy(1,10);
     int potsize = g->board.pot;
     printf(" > Pot:   "YELLOW"%-4d"RESET, potsize);
-    gotoxy(1,9);
+    gotoxy(1,11);
     int minbet = g->board.minBet;
     printf(" > MinBet:"YELLOW"%-4d"RESET,minbet);
-    gotoxy(65,7);
+    gotoxy(65,9);
     int round = g->round;
     printf("Round: %-3d", round);
-    //adress the 0/3/4/5 amount of com.cards
-    cardPrint(18, 8, 0,0);//Magic Numbers, adress
-    cardPrint(18+8, 8, 1,0);//Magic Numbers, adress
-    cardPrint(18+16, 8, 2,0);//Magic Numbers, adress
-    cardPrint(18+24, 8, 3,0);//Magic Numbers, adress
-    cardPrint(18+32, 8, 4,0);//Magic Numbers, adress
+    
+    int card1Rank = g->boardHand.cards[0].rank; int card1Suit = g->boardHand.cards[0].suit;
+    int card2Rank = g->boardHand.cards[1].rank; int card2Suit = g->boardHand.cards[1].suit;
+    int card3Rank = g->boardHand.cards[2].rank; int card3Suit = g->boardHand.cards[2].suit;
+    int card4Rank = g->boardHand.cards[3].rank; int card4Suit = g->boardHand.cards[3].suit;
+    int card5Rank = g->boardHand.cards[4].rank; int card5Suit = g->boardHand.cards[4].suit;
+    int comCardCount = g->boardHand.count;
+    if(comCardCount >= 3){
+        cardPrint(18, 10, card1Rank,card1Suit);
+        cardPrint(18+8, 10, card2Rank,card2Suit);
+        cardPrint(18+16, 10, card3Rank,card3Suit);
+    }
+    if(comCardCount >= 4){
+        cardPrint(18+24, 10, card4Rank,card4Suit);
+    }
+    if(comCardCount == 5){
+        cardPrint(18+32, 10, card5Rank,card5Suit);
+    }
     //Player area
-    gotoxy(1,14);
+    gotoxy(1,16);
     for(int i = 0; i < 74; i ++){
         if(i != 53){printf("─");}
         else{printf("┬");}
@@ -141,46 +212,42 @@ void drawFrame(GAME *g){
     printf(" > Chips: "YELLOW"%-4d"RESET"\n", playerChips);
     printf(" > Bet:   "YELLOW"%-4d"RESET"\n", playerBet);
     //adress that cards might not exist yet
-    cardPrint(29,16, 8,3);//Magic Numbers, adress
-    cardPrint(39,16, 8,3);//Magic Numbers, adress
-    gotoxy(54,15);
-    printf("| Available actions:");
-    gotoxy(54,16);
-    printf("|  ["CYAN"0"RESET"] Call / Check");
+    int player1Rank = g->playerHand.cards[0].rank; int player1Suit = g->playerHand.cards[0].suit; 
+    int player2Rank = g->playerHand.cards[1].rank; int player2Suit = g->playerHand.cards[1].suit;
+    if(g->playerHand.count >= 1){
+        cardPrint(29,18, player1Rank,player1Suit);
+    }
+    if(g->playerHand.count == 2){
+        cardPrint(39,18, player2Rank,player2Suit);//Magic Numbers, adress
+    }
     gotoxy(54,17);
-    printf("|  ["CYAN"1"RESET"] Raise");
+    printf("| Available actions:");
     gotoxy(54,18);
-    printf("|  ["CYAN"2"RESET"] All-In");
+    printf("|  ["CYAN"0"RESET"] Call / Check");
     gotoxy(54,19);
-    printf("|  ["CYAN"3"RESET"] Fold");
+    printf("|  ["CYAN"1"RESET"] Raise");
     gotoxy(54,20);
-    printf("├────────────────────");
+    printf("|  ["CYAN"2"RESET"] All-In");
     gotoxy(54,21);
-    printf("| Enter choice:");
+    printf("|  ["CYAN"3"RESET"] Fold");
     gotoxy(54,22);
+    printf("├────────────────────");
+    gotoxy(54,23);
+    printf("| Enter choice:");
+    gotoxy(54,24);
     printf("┴────────────────────");
     //line segment
-    gotoxy(1,22);
+    gotoxy(1,24);
     for(int i = 0; i < 74; i ++){
         if(i != 53){printf("─");}
         else{printf("┴");}
     }
-    //useful info
-    gotoxy(1,23);
-    //fork evaluate
-    printf("Pairs: %d | Three of a kind: %d | Four of a kind: %d | Straight: %d | Flush: %d ",2, 0, 0, 1, 0);//Magic Numbers, adress
-    /*
-    gotoxy(70,21);
-    int x;
-    scanf("%d",&x);
-    gotoxy(70, 24);
-    printf("%d",x);
-    */
 }
 //  TO-DO
-//  - Make the window drawing a function
-//      - Use GAME *g
+//  - Add input
 //  - Add Linux and MAC support
+//  - Add a showdown screen, show all cards of active players
+//  - Add a size-reffrence screen before game begins so the player can resize the terminal window
 /*
 LINUX version
 #include <stdio.h>

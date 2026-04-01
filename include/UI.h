@@ -1,6 +1,7 @@
 #ifndef UI_H
 #define UI_H
 #include "game.h"
+#include "evaluate.h"
 //colors
 #define BLUE "\033[34m" 
 #define GRAY "\033[90m" 
@@ -17,6 +18,8 @@
 #define ITALIC "\033[1;34;3m" 
 
 void gotoxy(int x, int y);
+void sizeDemo();
+void showdownScreen();
 void botWindow(int xCord, int yCord, char* botName, int chips, int bet, int colIndex, int foldedStatus, int activeStatus);
 void cardPrint(int xCord,int yCord, int rank, int suit);
 void drawFrame(GAME *g);
