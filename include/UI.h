@@ -27,8 +27,7 @@ void cardPrint(int xCord,int yCord, int rank, int suit);
 int inputpl(GAME *g);
 void communityWindow(GAME *g);
 void playerWindow(GAME *g);
-
 void drawFrame(GAME *g);
-
 void updateBotWindow(GAME *g, int botIndex);
+void showdownScreenResult(GAME *game, int indexWinner, int comboIndex);
 #endif

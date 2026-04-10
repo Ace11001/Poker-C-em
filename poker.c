@@ -12,10 +12,11 @@
 #include "game.h"
 #include "UI.h"
 
-#define BOT_TIMER 150
-#define CARD_TIMER 40
+#define BOT_TIMER 1500
+#define CARD_TIMER 400
 
 int main(void){
+    
     //Init
     printf(BLUE"SETUP START"RESET"\n");
     srand(time(NULL));
@@ -25,6 +26,7 @@ int main(void){
     GAME game;
     initGame(&game);
     printf(BLUE"SETUP END"RESET"\n\n");
+    
     //Start
     initGame(&game);
     sizeDemo();
@@ -52,7 +54,7 @@ int main(void){
             }
         }
         gotoxy(3+60,2);printf(" ");
-        game.playerChoice = inputpl(&game);
+        inputpl(&game);
         PlayerActionExec(game.playerChoice, &game.player, &game.board);
         playerWindow(&game);
         communityWindow(&game);
@@ -95,7 +97,7 @@ int main(void){
             }
         }
         gotoxy(3+60,2);printf(" ");
-        game.playerChoice = inputpl(&game);
+        inputpl(&game);
         PlayerActionExec(game.playerChoice, &game.player, &game.board);
         playerWindow(&game);
         communityWindow(&game);
@@ -132,7 +134,7 @@ int main(void){
             }
         }
         gotoxy(3+60,2);printf(" ");
-        game.playerChoice = inputpl(&game);
+        inputpl(&game);
         PlayerActionExec(game.playerChoice, &game.player, &game.board);
         playerWindow(&game);
         communityWindow(&game);
@@ -143,6 +145,14 @@ int main(void){
         if(botFolds == 5){
             break;
         }
+        int largestBet = game.player.bet;
+        for(int i = 0; i <5; i++){
+            if(game.bots[i].bet >= largestBet){
+                largestBet = game.bots[i].bet;
+            }
+        }
+        game.board.minBet = largestBet;
+        
     }
     autoPot(&game);
     drawFrame(&game);
@@ -169,7 +179,7 @@ int main(void){
             }
         }
         gotoxy(3+60,2);printf(" ");
-        game.playerChoice = inputpl(&game);
+        inputpl(&game);
         PlayerActionExec(game.playerChoice, &game.player, &game.board);
         playerWindow(&game);
         communityWindow(&game);
@@ -181,7 +191,38 @@ int main(void){
             break;
         }
     }
+    //Evaluation
+    system("cls");
+
+    int playerEval, bot1Eval, bot2Eval, bot3Eval, bot4Eval, bot5Eval;
+    if(game.player.active == 1 && game.player.folded == 0){playerEval = evaluateMain(&game.playerHand, &game.boardHand);}
+    if(game.bots[0].active == 1 && game.bots[0].folded == 0){bot1Eval = evaluateMain(&game.botHands[0], &game.boardHand);}
+    if(game.bots[1].active == 1 && game.bots[0].folded == 0){bot2Eval = evaluateMain(&game.botHands[1], &game.boardHand);}
+    if(game.bots[2].active == 1 && game.bots[0].folded == 0){bot3Eval = evaluateMain(&game.botHands[2], &game.boardHand);}
+    if(game.bots[3].active == 1 && game.bots[0].folded == 0){bot4Eval = evaluateMain(&game.botHands[3], &game.boardHand);}
+    if(game.bots[4].active == 1 && game.bots[0].folded == 0){bot5Eval = evaluateMain(&game.botHands[4], &game.boardHand);}
+    
+    int bestEval = -1;
+    int bestPlayerId = -1;  // 0–4 bots, 5 player
+
+    if (game.player.active == 1 && game.player.folded == 0) {
+        int playerEval = evaluateMain(&game.playerHand, &game.boardHand);
+        if (playerEval > bestEval) {
+            bestEval = playerEval;
+            bestPlayerId = 5;
+        }
+    }
+    for (int i = 0; i < 5; i++) {
+        if (game.bots[i].active == 1 && game.bots[i].folded == 0) {
+            int botEval = evaluateMain(&game.botHands[i], &game.boardHand);
+            if (botEval > bestEval) {
+                bestEval = botEval;
+                bestPlayerId = i;
+            }
+        }
+    }
     showdownScreen();
-    _sleep(1000);
+    _sleep(2500);
+    showdownScreenResult(&game, bestPlayerId,bestEval-1);
     return 0;
 }

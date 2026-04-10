@@ -2,6 +2,7 @@
 #include "hand.h"
 #include "evaluate.h"
 #include "game.h"
+#include "UI.h"
 
 int ChensFormula(Hand* h) {
     const double firstStepScores[13] = {1.0,1.5,2.0,2.5,3.0,3.5,4.0,4.5,5.0,6.0,7.0,8.0,10.0};
@@ -382,12 +383,12 @@ void bot_PreFlop(GAME *g, int botIndex){
             printf("Bot%d calls\n",botIndex+1);
         } else if(score < 0.55){
             //RAISE
-            g->bots[botIndex].bet = 6; //magic number, fix later
+            g->bots[botIndex].bet = g->board.minBet + 6; //magic number, fix later
             g->board.minBet = g->bots[botIndex].bet;
             printf("Bot%d raises %d\n",botIndex+1,g->bots[botIndex].bet);
         } else{
             //RAISE
-            g->bots[botIndex].bet = 12; //magic number, fix later
+            g->bots[botIndex].bet = g->board.minBet + 12; //magic number, fix later
             g->board.minBet = g->bots[botIndex].bet;
             printf("Bot%d raises %d\n",botIndex+1,g->bots[botIndex].bet);
         }
@@ -434,10 +435,9 @@ void bot_Flop(GAME *g, int botIndex) {
     int maxRaise = stack / 3;          // never raise more than ~1/3 of stack
     if (maxRaise < 6) maxRaise = 6;
 
-    int raise3x = minBet * 3;
-    int raiseSize = raise3x;
-    if (raise3x > maxRaise) {
-        raiseSize = maxRaise;
+    int raise = minBet * 1.5;
+    if (raise > maxRaise) {
+        raise = maxRaise;
     }
     allInHandle(g, botIndex, 0.8);
     if (scoreFlop < 0.25) {
@@ -464,17 +464,21 @@ void bot_Flop(GAME *g, int botIndex) {
         printf("Bot%d calls\n",1+botIndex);
     } else if (scoreFlop < 0.55 || chipsStatus == 1) {
         //RAISE
-        g->bots[botIndex].bet = raiseSize;
-        g->board.minBet = raiseSize;
-        printf("Bot%d raises %d\n", botId, raiseSize);
+        g->bots[botIndex].bet = raise;
+        g->board.minBet = raise;
+        printf("Bot%d raises %d\n", botId, raise);
     } else {
         //RAISE
-        g->bots[botIndex].bet = stack;  // All‑in only on very strong hands
-        printf("Bot%d raises %d\n", botId, stack);
+        g->bots[botIndex].bet = raise;  // All‑in only on very strong hands
+        g->board.minBet = raise;
+        printf("Bot%d raises %d\n", botId, raise);
     }
     fflush(stdout);
 }
 void bot_Turn(GAME *g, int botIndex) {
+    if(g->player.bet>g->board.minBet){
+        g->board.minBet = g->player.bet;
+    }
     int botId = botIndex + 1;
     int Astatus = g->bots[botIndex].active;
     int Fstatus = g->bots[botIndex].folded;
@@ -519,7 +523,7 @@ void bot_Turn(GAME *g, int botIndex) {
     if (raise3x > maxRaise) {
         raiseSize = maxRaise;
     }
-
+    int buffer;
     if (scoreTurn < 0.25) {
         //FOLD
         g->bots[botIndex].folded = 1;
@@ -532,14 +536,16 @@ void bot_Turn(GAME *g, int botIndex) {
         } else {
             //CALL
             if(g->bots[botIndex].bet != g->board.minBet){
-                g->bots[botIndex].bet = g->board.minBet;
+                buffer = g->board.minBet;
+                g->bots[botIndex].bet = buffer;
             }
             printf("Bot%d calls\n",botIndex+1);
         }
     } else if (scoreTurn < 0.45) {
         //CALL
         if(g->bots[botIndex].bet != g->board.minBet){
-            g->bots[botIndex].bet = g->board.minBet;
+            buffer = g->board.minBet;
+            g->bots[botIndex].bet = buffer;
         }
         printf("Bot%d calls\n",botIndex+1);
     } else if (scoreTurn < 0.55 || chipsStatus == 1) {

@@ -39,20 +39,28 @@ int playerAction(){
     return choice;
 }
 void Player_Call_Check(Player *p, Board *b) {
+    if(p->bet>b->minBet){
+        b->minBet = p->bet;
+    }
     int diff = b->minBet - p->bet;
     if (diff > 0) {
         p->bet += diff;
     }
 }
-void Player_Raise(Player *p,Board *b){
+void Player_Raise(Player *p, Board *b){
     int currPot = b->pot;
     int playerBet = p->bet;
     int playerRaiseAmount;
     gotoxy(1,23);
     printf(">Enter the amount you want to bet(minimal: %d):", b->minBet+1);
     scanf("%d",&playerRaiseAmount);
+    if(playerRaiseAmount <= b->minBet) {
+        printf("Invalid raise!\n");
+        return;
+    }
+    int toCall = b->minBet - p->bet;
     p->bet = playerRaiseAmount;
-    b->minBet = p->bet;
+    b->minBet = playerRaiseAmount;
 }
 void Player_ALLIN(Player *p, Board *b){
     int AllInSize = p->chips;
