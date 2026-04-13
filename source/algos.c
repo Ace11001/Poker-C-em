@@ -631,14 +631,20 @@ void bot_River(GAME *g, int botIndex) {
         printf("Bot%d calls\n",botIndex+1);
     } else if (scoreRiver < 0.55 || chipsStatus == 1) {
         //RAISE
+        if(raiseSize > 100){
+            g->bots[botIndex].bet = g->board.minBet;
+        }else{
         g->bots[botIndex].bet = raiseSize;
         g->board.minBet = raiseSize;
-        printf("Bot%d raises %d\n", botId, raiseSize);
+        }
     } else {
         //RAISE
+        if(raiseSize > 100){
+            g->bots[botIndex].bet = g->board.minBet;
+        }else{
         g->bots[botIndex].bet = raiseSize;
         g->board.minBet = raiseSize;
-        printf("Bot%d raises %d\n", botId, raiseSize);
+        }
     }
     fflush(stdout);
 }

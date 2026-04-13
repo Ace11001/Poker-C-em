@@ -11,6 +11,7 @@
 #include "game.h"
 #include "game.h"
 #include "UI.h"
+#include "bots.h"
 
 #define BOT_TIMER 1500
 #define CARD_TIMER 400
@@ -43,7 +44,7 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                bot_PreFlop(&game, i);
+                botLogic3(&game, i, 0);
 
                 updateBotWindow(&game, i);
                 communityWindow(&game);
@@ -87,7 +88,8 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                bot_Flop(&game, i);
+                botLogic3(&game, i, 1);
+
                 updateBotWindow(&game, i);
                 communityWindow(&game);
                 gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
@@ -124,7 +126,8 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                bot_Turn(&game, i);
+                botLogic3(&game, i, 2);
+
                 updateBotWindow(&game, i);
                 communityWindow(&game);
                 gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
@@ -169,7 +172,8 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                bot_River(&game, i);
+                botLogic3(&game, i, 3);
+
                 updateBotWindow(&game, i);
                 communityWindow(&game);
                 gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
