@@ -12,29 +12,60 @@
 #include "game.h"
 #include "UI.h"
 #include "bots.h"
+#include "log.h"
 
-#define BOT_TIMER 1500
-#define CARD_TIMER 400
+#define BOT_TIMER 150
+#define CARD_TIMER 40
+
+FILE *logfp;
+
+void log_timestamp(FILE *logfp) {
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    fprintf(logfp, "at %.2d:%.2d:%.2d\n",t->tm_hour, t->tm_min, t->tm_sec);
+}
 
 int main(void){
-    
+    //LOGS
+    logfp = fopen("C:/Users/galje/Desktop/PM_Poker_C/game_log.log", "a");
+    if (!logfp) {
+        perror("fopen(C:/Users/galje/Desktop/PM_Poker_C/game_log.log)");
+        exit(EXIT_FAILURE);
+    }
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
     //Init
-    printf(BLUE"SETUP START"RESET"\n");
+    fprintf(logfp, "Startup - Start ");
+    log_timestamp(logfp);
+    fflush(logfp);
+
     srand(time(NULL));
     createDeck(deck);
     shuffleDeck(deck);
     resetDeck(deck);
     GAME game;
     initGame(&game);
-    printf(BLUE"SETUP END"RESET"\n\n");
-    
+
+    fprintf(logfp, "Startup - End ");
+    log_timestamp(logfp);
+    fflush(logfp);
     //Start
     initGame(&game);
+
+    fprintf(logfp,"Game Init done ");
+    log_timestamp(logfp);
+    playerLog(logfp, &game);
+    fflush(logfp);
+
     sizeDemo();
     dealToActivePlayers(&game);
     drawFrame(&game);
     
-    
+    fprintf(logfp,"Hands dealt ");
+    log_timestamp(logfp);
+    handLog(logfp, &game);
+    boardHLog(logfp, &game);
+    fflush(logfp);
     
     //start of betting round - PREFLOP
     while(!allBetOrFolded(&game)){
@@ -44,7 +75,7 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                botLogic3(&game, i, 0);
+                botLogic3(&game, i, 0, logfp);
 
                 updateBotWindow(&game, i);
                 communityWindow(&game);
@@ -88,7 +119,7 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                botLogic3(&game, i, 1);
+                botLogic3(&game, i, 1, logfp);
 
                 updateBotWindow(&game, i);
                 communityWindow(&game);
@@ -126,7 +157,7 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                botLogic3(&game, i, 2);
+                botLogic3(&game, i, 2, logfp);
 
                 updateBotWindow(&game, i);
                 communityWindow(&game);
@@ -172,7 +203,7 @@ int main(void){
                 printf(" ");
                 gotoxy(1,23);
 
-                botLogic3(&game, i, 3);
+                botLogic3(&game, i, 3, logfp);
 
                 updateBotWindow(&game, i);
                 communityWindow(&game);
@@ -228,5 +259,11 @@ int main(void){
     showdownScreen();
     _sleep(2500);
     showdownScreenResult(&game, bestPlayerId,bestEval-1);
+
+
+
+    //end of LOG
+    fflush(logfp);
+    fclose(logfp);
     return 0;
 }

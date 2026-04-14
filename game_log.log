@@ -1,0 +1,35 @@
+Startup - Start at 00:48:35
+Startup - End at 00:48:35
+Game Init done at 00:48:35
+Players:6|Active:6|Round:1
+>Player|Active:1|Folded:0|Chips:1000|Bet:0
+>Bot1  |Active:1|Folded:0|Chips:1000|Bet:0
+>Bot2  |Active:1|Folded:0|Chips:1000|Bet:0
+>Bot3  |Active:1|Folded:0|Chips:1000|Bet:0
+>Bot4  |Active:1|Folded:0|Chips:1000|Bet:0
+>Bot5  |Active:1|Folded:0|Chips:1000|Bet:0
+Hands dealt at 00:48:36
+Cards:
+>Player|    5 of Hearts  |    5 of Diamonds
+>Bot 1 |   10 of Spades  |    5 of Clubs   
+>Bot 2 |    4 of Clubs   |    7 of Clubs   
+>Bot 3 |    9 of Diamonds| Jack of Spades  
+>Bot 4 |    9 of Spades  |   10 of Diamonds
+>Bot 5 |    7 of Diamonds|Queen of Clubs   
+Board Cards:
+>Board Cards don't exist
+BOT1 logic stats:
+AnalysisScore:0.000000
+>BOT FOLD - finalScore < foldThreshold
+BOT2 logic stats:
+AnalysisScore:0.000000
+>BOT FOLD - finalScore < foldThreshold
+BOT3 logic stats:
+AnalysisScore:0.050000
+>BOT FOLD - finalScore < foldThreshold
+BOT4 logic stats:
+AnalysisScore:0.090000
+>BOT FOLD - finalScore < foldThreshold
+BOT5 logic stats:
+AnalysisScore:0.000000
+>BOT FOLD - finalScore < foldThreshold

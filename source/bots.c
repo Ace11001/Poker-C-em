@@ -1,8 +1,10 @@
+#include <stdlib.h>
 #include "algos.h"
 #include "hand.h"
 #include "evaluate.h"
 #include "game.h"
 #include "UI.h"
+#include "log.h"
 
 double botAnalysis(GAME *g, int botIndex, int phase){//phase - 0Preflop, 1FLop, 2Turn, 3River
     
@@ -117,7 +119,7 @@ int chipAdvantage(GAME *g, int botIndex){
     if(chipAvg > myChips){return 0;}
     else{return 1;}
 }
-void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double foldThreshold, double callThreshold, double raiseThreshold, double ALLIN_threshold){
+void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double foldThreshold, double callThreshold, double raiseThreshold, double ALLIN_threshold, FILE *logfp){
     int botChips = g->bots[botIndex].chips;
     int min = g->board.minBet;
     int maxR = 300 + (g->board.pot/10) + (g->board.minBet);
@@ -138,32 +140,44 @@ void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double fold
     if(finalScore < foldThreshold){
         //FOLD
         g->bots[botIndex].folded = 1;
+        fprintf(logfp,">BOT FOLD - finalScore < foldThreshold\n");
+        fflush(logfp);
         return;
     }else if(finalScore < callThreshold){
         if(g->board.minBet > 12){
             //FOLD
             g->bots[botIndex].folded = 1;
+            fprintf(logfp,">BOT FOLD - finalScore < callThreshold && g->board.minbet > 12\n");
+            fflush(logfp);
             return;
         }else{
             //CALL
             g->bots[botIndex].bet = min;
+            fprintf(logfp,">BOT CALL - finalScore < callThreshold && !(g->board.minbet > 12)\n");
+            fflush(logfp);
             return;
         }
     }else if(finalScore < raiseThreshold){
         if(g->bots[botIndex].chips - g->board.minBet < 100){
             //CALL
             g->bots[botIndex].bet = min;
+            fprintf(logfp, ">BOT CALL - finalScore < raiseThreshold && chips-bet < 100\n");
+            fflush(logfp);
             return;
         }else{
             //RAISE
             int raise = calculateRaise(g, botIndex, phase);
             g->bots[botIndex].bet = raise;
             g->board.minBet = raise;
+            fprintf(logfp, ">BOT RAISE - chips-bet > 100\n");
+            fflush(logfp);
             return;
         }
     }else{
         //CALL -until allin works
         g->bots[botIndex].folded = 1;
+        fprintf(logfp, ">BOT CALLS - lack of ALLIN HANDLING\n");
+        fflush(logfp);
         return;
         /*ALL-IN  WIP
         if(chipAdvantage(g, botIndex) == 1){
@@ -176,7 +190,7 @@ void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double fold
     }
 }
 //TEST_BOT2
-void botLogic2(GAME*g, int botIndex, int phase){
+void botLogic2(GAME*g, int botIndex, int phase, FILE *logfp){
     if (g->bots[botIndex].folded == 1) {
         return;
     }
@@ -215,7 +229,7 @@ void botLogic2(GAME*g, int botIndex, int phase){
     }
     double analysisScore = botAnalysis(g, botIndex, phase);
     int chipAdv = chipAdvantage(g, botIndex);
-    decisionTree(g, botIndex, phase, analysisScore, foldT,callT,raiseT,allinT);
+    decisionTree(g, botIndex, phase, analysisScore, foldT,callT,raiseT,allinT, logfp);
 }
 //Inclusion of evaluate.c
 void permutateFLOP(Hand* hand1, Hand* boardhand,  Hand5 out[1]) {
@@ -260,7 +274,7 @@ double botCardEval(GAME *g, int botIndex, Hand5 out[], int outNum) {
     }
     return biggestScore;
 }
-void botLogic3(GAME *g, int botIndex, int phase){
+void botLogic3(GAME *g, int botIndex, int phase, FILE *logfp){
     if (g->bots[botIndex].folded == 1) {
         return;
     }
@@ -304,8 +318,10 @@ void botLogic3(GAME *g, int botIndex, int phase){
     }
     analysisScore = 0.3 * analysisScore + 0.7 * cardScore;
 
-    
+    fprintf(logfp, "BOT%d logic stats:\n",botIndex+1);
+    fprintf(logfp, "AnalysisScore:%f\n",analysisScore);
+    fflush(logfp);
     
     int chipAdv = chipAdvantage(g, botIndex);
-    decisionTree(g, botIndex, phase, analysisScore, foldT,callT,raiseT,allinT);  
+    decisionTree(g, botIndex, phase, analysisScore, foldT,callT,raiseT,allinT, logfp);  
 }
