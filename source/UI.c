@@ -173,6 +173,9 @@ void cardPrint(int xCord,int yCord, int rank, int suit){
     }
 }
 int inputpl(GAME *g){
+    if(g->player.folded == 1 || g->player.active == 0){
+        return 3;
+    }
     gotoxy(55,21);
     printf(" Enter choice:");
     gotoxy(69,21);
@@ -360,12 +363,16 @@ void showdownScreenResult(GAME *game, int indexWinner, int comboIndex) {
     }
     // Player
     gotoxy(1,17); printf("PLAYER Chips:%4d", game->player.chips);
+    if(game->player.folded == 1){
+        printf(" ~ Folded");
+    }
+
     cardPrint(1, 18, game->playerHand.cards[0].rank, game->playerHand.cards[0].suit);
     cardPrint(9, 18, game->playerHand.cards[1].rank, game->playerHand.cards[1].suit);
     
 
     fflush(stdout);
-    gotoxy(1,23);
+    gotoxy(1,24);
 }
 
 //  TO-DO

@@ -13,8 +13,8 @@
 #include "bots.h"
 #include "log.h"
 
-#define BOT_TIMER 150
-#define CARD_TIMER 40
+#define BOT_TIMER 1500
+#define CARD_TIMER 400
 
 FILE *logfp;
 
@@ -27,9 +27,9 @@ void log_timestamp(FILE *logfp) {
 
 int main(void){
     //LOGS
-    logfp = fopen("C:/Users/galje/Desktop/PM_Poker_C/game_log.log", "a");
+    logfp = fopen("game.log", "a");
     if (!logfp) {
-        perror("fopen(C:/Users/galje/Desktop/PM_Poker_C/game_log.log)");
+        perror("fopen(game.log)");
         exit(EXIT_FAILURE);
     }
     time_t now = time(NULL);
@@ -49,14 +49,14 @@ int main(void){
     fprintf(logfp, "Startup - End ");
     log_timestamp(logfp);
     fflush(logfp);
-    //Start
+    //Start of round
     initGame(&game);
 
     fprintf(logfp,"\nGame Init done ");
     log_timestamp(logfp);
     playerLog(logfp, &game);
     fflush(logfp);
-
+    fprintf(logfp, "Round %d Start\n", game.round);
     sizeDemo();
     dealToActivePlayers(&game);
     drawFrame(&game);

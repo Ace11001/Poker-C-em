@@ -4,6 +4,7 @@ test.c
 build.bat
 cards.exe
 algotest.exe
+game.log
 build/
 .vscode/settings.json
 PM_Poker_C.code-workspace

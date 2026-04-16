@@ -138,20 +138,20 @@ void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double fold
     int botChips = g->bots[botIndex].chips;
     int min = g->board.minBet;
     int maxR = 300 + (g->board.pot/10) + (g->board.minBet);
-    /*ALL-IN handling WIP
-    if(g->board.AllInStatus == 1) {
-        if(finalScore < ALLIN_threshold) {
-            g->bots[botIndex].folded = 1;
+
+    if (phase == 3 && finalScore < callThreshold) {
+        // On the river, do not fold; call if possible, otherwise go all-in.
+        if (min <= botChips) {
+            g->bots[botIndex].bet = min;
+            fprintf(logfp, ">BOT CALL - river fallback (no fold on river)\n\n");
         } else {
-            if(botChips >= min) {
-                g->bots[botIndex].bet = min; //call
-            } else {
-                g->bots[botIndex].bet = botChips; //all‑in
-            }
+            g->bots[botIndex].bet = botChips;
+            fprintf(logfp, ">BOT ALL-IN - river fallback (no fold on river)\n\n");
         }
+        fflush(logfp);
         return;
     }
-    */
+
     if(finalScore < foldThreshold){
         //FOLD
         g->bots[botIndex].folded = 1;
@@ -201,57 +201,9 @@ void decisionTree(GAME *g, int botIndex,int phase, double finalScore,double fold
         fprintf(logfp, ">BOT CALLS - lack of ALLIN HANDLING\n\n");
         fflush(logfp);
         return;
-        /*ALL-IN  WIP
-        if(chipAdvantage(g, botIndex) == 1){
-            g->bots[botIndex].bet = g->bots[botIndex].chips;
-            g->board.AllInStatus = 1;
-            g->board.AllInSize = g->bots[botIndex].bet;
-            g->board.minBet = g->board.AllInSize;
-        }
-        */
+        //ALL-IN  WIP
+        
     }
-}
-//TEST_BOT2
-void botLogic2(GAME*g, int botIndex, int phase, FILE *logfp){
-    if (g->bots[botIndex].folded == 1) {
-        return;
-    }
-    if (g->bots[botIndex].bet >= g->bots[botIndex].chips) {
-        return;//Already allin
-    }
-    double foldT, callT, raiseT, allinT;
-    switch(phase){
-        case 0: // PreFlop
-            foldT   = 0.3;  
-            callT   = 0.55; 
-            raiseT  = 0.7;  
-            allinT  = 0.95; 
-            break;
-        case 1: // Flop
-            foldT   = 0.25;
-            callT   = 0.5;
-            raiseT  = 0.7;
-            allinT  = 0.95;
-        case 2: // Turn
-            foldT   = 0.15;
-            callT   = 0.5;
-            raiseT  = 0.7;
-            allinT  = 0.9;
-        case 3: // River
-            foldT   = 0.10;
-            callT   = 0.5;
-            raiseT  = 0.75;
-            allinT  = 0.85;
-        default:
-            foldT   = 0.3;
-            callT   = 0.55;
-            raiseT  = 0.7;
-            allinT  = 0.95;
-            break;
-    }
-    double analysisScore = botAnalysis(g, botIndex, phase, logfp);
-    int chipAdv = chipAdvantage(g, botIndex);
-    decisionTree(g, botIndex, phase, analysisScore, foldT,callT,raiseT,allinT, logfp);
 }
 //Inclusion of evaluate.c
 void permutateFLOP(Hand* hand1, Hand* boardhand,  Hand5 out[1]) {
@@ -316,7 +268,7 @@ void botLogic3(GAME *g, int botIndex, int phase, FILE *logfp){
             raiseT  = 0.75;
             break;
         case 3: // River
-            foldT   = 0.001;
+            foldT   = 0.0001;
             callT   = 0.45;
             raiseT  = 0.75;
             break;
