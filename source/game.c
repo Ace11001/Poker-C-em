@@ -173,3 +173,34 @@ void autoPot(GAME *g){
         g->bots[i].bet = 0;
     }
 }
+
+void resetForNextRound(GAME *game){
+    game->board.phase = 0;
+    game->board.AllInSize = 0;
+    game->board.AllInStatus = 0;
+    game->board.minBet = 0;
+    game->board.pot = 0;
+    for(int i = 0; i < 5; i++){
+        game->bots[i].bet = 0;
+        game->bots[i].folded = 0;
+        game->bots[i].raiseCount = 0;
+        game->bots[i].score = 0;
+        if(game->bots[i].chips <= 0){
+            game->bots[i].active = 0;
+        }
+        game->botHands[i].count = 0;
+    }
+    game->player.bet = 0;
+    game->player.folded = 0;
+    if(game->player.chips <=0){
+        game->player.active = 0;
+    }
+    game->player.score=0;
+    game->noMoreRaises=0;
+    game->playerChoice = 0;
+    clearHand(&game->playerHand);
+    for(int i = 0; i < 5; i++){
+        clearHand(&game->botHands[i]);
+    }
+    clearHand(&game->boardHand);
+}

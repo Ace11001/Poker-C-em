@@ -13,8 +13,8 @@
 #include "bots.h"
 #include "log.h"
 
-#define BOT_TIMER 1500
-#define CARD_TIMER 400
+#define BOT_TIMER 15
+#define CARD_TIMER 4
 
 FILE *logfp;
 
@@ -23,8 +23,170 @@ void log_timestamp(FILE *logfp) {
     struct tm *t = localtime(&now);
     fprintf(logfp, "at %.2d:%.2d:%.2d\n",t->tm_hour, t->tm_min, t->tm_sec);
 }
+void bettingRound(GAME *game, int phase){
+    while(!allBetOrFolded(game)){
+        for(int i = 0; i < 5; i++){
+            if(game->bots[i].folded == 0 && game->bots[i].active == 1){
+                gotoxy(3 + ((i-1)*15), 2);
+                printf(" ");
+                gotoxy(1,23);
+
+                fprintf(logfp, "BOT%d logic stats:\n",i+1);
+                botLogic3(game, i, phase, logfp);
+
+                updateBotWindow(game, i);
+                communityWindow(game);
+                gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
+                gotoxy(1,23);
+                _sleep(BOT_TIMER);
+                gotoxy(3 + (i*15), 2);printf(" ");
+            }
+        }
+        gotoxy(3+60,2);printf(" ");
+        inputpl(game);
+        fprintf(logfp, "Player's choice:%d|CALL/RAISE/ALLIN/FOLD|\n\n",game->playerChoice);
+        PlayerActionExec(game->playerChoice, &game->player, &game->board);
+        playerWindow(game);
+        communityWindow(game);
+        int botFolds = 0;
+        for(int i = 0; i < 5; i++){
+            if(game->bots[i].folded){botFolds++;}
+        }
+        if(botFolds == 5){
+            break;
+        }
+    }
+}
+
+void mainRound(GAME *game){
+    fprintf(logfp,"\nGame Init done ");
+    log_timestamp(logfp);
+    playerLog(logfp, game);
+    fflush(logfp);
+    fprintf(logfp, "Round %d Start\n", game->round);
+    dealToActivePlayers(game);
+    drawFrame(game);
+    
+    fprintf(logfp,"\nHands dealt ");
+    log_timestamp(logfp);
+    handLog(logfp, game);
+    boardHLog(logfp, game);
+    fprintf(logfp, "\n");
+    fflush(logfp);
+    
+    //start of betting round - PREFLOP
+    bettingRound(game, 0);
+    for(int i = 0; i < 5; i++){
+        game->bots[i].raiseCount=0;
+    }
+    //need to check if game can still continue - all bots folded or similar situations ->award pot
+    //end ofbetting round - PREFLOP
+    autoPot(game);
+    drawFrame(game);//redraw whole frame for convenience
+    //drawing community cards
+    for(int i = 0; i < 3; i++){
+        dealToHand(&game->boardHand, deck, &game->deckTop);
+        communityWindow(game);
+        _sleep(CARD_TIMER);
+    }
+    game->board.communityCount = 3;
+    game->boardHand.count = 3;
+    //community cards dealt
+    //FLOP
+    bettingRound(game, 1);
+    for(int i = 0; i < 5; i++){
+        game->bots[i].raiseCount=0;
+    }
+    autoPot(game);
+    drawFrame(game);
+    dealToHand(&game->boardHand,deck, &game->deckTop);
+    communityWindow(game);
+    _sleep(CARD_TIMER);
+    game->board.communityCount = 4;
+    game->boardHand.count = 4;
+    //TURN
+    bettingRound(game, 2);
+    for(int i = 0; i < 5; i++){
+        game->bots[i].raiseCount=0;
+    }
+    autoPot(game);
+    drawFrame(game);
+    dealToHand(&game->boardHand, deck, &game->deckTop);
+    communityWindow(game);
+    _sleep(CARD_TIMER);
+    game->board.communityCount = 5;
+    game->boardHand.count = 5;
+    //RIVER
+    bettingRound(game, 3);
+    //Evaluation
+    system("cls");
+
+    int playerEval, bot1Eval, bot2Eval, bot3Eval, bot4Eval, bot5Eval;
+    if(game->player.active == 1 && game->player.folded == 0){playerEval = evaluateMain(&game->playerHand, &game->boardHand);}
+    if(game->bots[0].active == 1 && game->bots[0].folded == 0){bot1Eval = evaluateMain(&game->botHands[0], &game->boardHand);}
+    if(game->bots[1].active == 1 && game->bots[1].folded == 0){bot2Eval = evaluateMain(&game->botHands[1], &game->boardHand);}
+    if(game->bots[2].active == 1 && game->bots[2].folded == 0){bot3Eval = evaluateMain(&game->botHands[2], &game->boardHand);}
+    if(game->bots[3].active == 1 && game->bots[3].folded == 0){bot4Eval = evaluateMain(&game->botHands[3], &game->boardHand);}
+    if(game->bots[4].active == 1 && game->bots[4].folded == 0){bot5Eval = evaluateMain(&game->botHands[4], &game->boardHand);}
+    
+    int bestEval = -1;
+    int bestPlayerId = -1;  // 0–4 bots, 5 player
+
+    if (game->player.active == 1 && game->player.folded == 0) {
+        int playerEval = evaluateMain(&game->playerHand, &game->boardHand);
+        if (playerEval > bestEval) {
+            bestEval = playerEval;
+            bestPlayerId = 5;
+        }
+    }
+    for (int i = 0; i < 5; i++) {
+        if (game->bots[i].active == 1 && game->bots[i].folded == 0) {
+            int botEval = evaluateMain(&game->botHands[i], &game->boardHand);
+            if (botEval > bestEval) {
+                bestEval = botEval;
+                bestPlayerId = i;
+            }
+        }
+    }
+    showdownScreen();
+    _sleep(2500);
+    showdownScreenResult(game, bestPlayerId,bestEval-1);
+    switch(bestPlayerId){
+        case 0:
+            payOutPot(&game->board, &game->bots[0]);break;
+        case 1:
+            payOutPot(&game->board, &game->bots[1]);break;
+        case 2:
+            payOutPot(&game->board, &game->bots[2]);break;
+        case 3:
+            payOutPot(&game->board, &game->bots[3]);break;
+        case 4:
+            payOutPot(&game->board, &game->bots[4]);break;
+        case 5:
+            payOutPot(&game->board, &game->player);break;
+        default:
+            //safety, PROBABLY not needed
+            int pot = game->board.pot;
+            int potPart = pot/5;
+            for(int i = 0; i < 5; i ++){
+                game->bots[i].chips += potPart;
+            }
+            game->player.chips += potPart;
+    }
+    
+
+    fprintf(logfp, "Winner ID:%d|BestEval ID:%d",bestPlayerId,bestEval);
+    fprintf(logfp,"PLAYER_ID: bots 0-4, player 5\n");
+    fprintf(logfp,"BESTEVAL_ID: HighCard 0 -> RoyalFlush 10\n");
+    fprintf(logfp,"End of Current Log ");
+    log_timestamp(logfp);
 
 
+    _sleep(7500);
+}
+
+
+ 
 int main(void){
     //LOGS
     logfp = fopen("game.log", "a");
@@ -45,245 +207,36 @@ int main(void){
     resetDeck(deck);
     GAME game;
     initGame(&game);
-
     fprintf(logfp, "Startup - End ");
     log_timestamp(logfp);
     fflush(logfp);
-    //Start of round
-    initGame(&game);
-
-    fprintf(logfp,"\nGame Init done ");
-    log_timestamp(logfp);
-    playerLog(logfp, &game);
-    fflush(logfp);
-    fprintf(logfp, "Round %d Start\n", game.round);
     sizeDemo();
-    dealToActivePlayers(&game);
-    drawFrame(&game);
-    
-    fprintf(logfp,"\nHands dealt ");
-    log_timestamp(logfp);
-    handLog(logfp, &game);
-    boardHLog(logfp, &game);
-    fprintf(logfp, "\n");
-    fflush(logfp);
-    
-    //start of betting round - PREFLOP
-    while(!allBetOrFolded(&game)){
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded == 0 && game.bots[i].active == 1){
-                gotoxy(3 + ((i-1)*15), 2);
-                printf(" ");
-                gotoxy(1,23);
-
-                fprintf(logfp, "BOT%d logic stats:\n",i+1);
-                botLogic3(&game, i, 0, logfp);
-
-                updateBotWindow(&game, i);
-                communityWindow(&game);
-                gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
-                gotoxy(1,23);
-                _sleep(BOT_TIMER);
-                gotoxy(3 + (i*15), 2);printf(" ");
-            }
+    while(game.player.chips > 0){
+        //Start of round
+        mainRound(&game);
+        //end of round new round
+        int plc = game.player.chips;
+        int b1 = game.bots[0].chips;
+        int b2 = game.bots[1].chips;
+        int b3 = game.bots[2].chips;
+        int b4 = game.bots[3].chips;
+        int b5 = game.bots[4].chips;
+        system("cls");
+        printf("Do you want to play again(0-no, 1-yes): ");
+        int endChoice;
+        scanf("%d", &endChoice);
+        if(endChoice == 0){
+            return 0;
         }
-        gotoxy(3+60,2);printf(" ");
-        inputpl(&game);
-        fprintf(logfp, "Player's choice:%d|CALL/RAISE/ALLIN/FOLD|\n\n",game.playerChoice);
-        PlayerActionExec(game.playerChoice, &game.player, &game.board);
-        playerWindow(&game);
-        communityWindow(&game);
-        int botFolds = 0;
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded){botFolds++;}
-        }
-        if(botFolds == 5){
-            break;
-        }
+        resetForNextRound(&game);
+        initGame(&game);
+        game.player.chips = plc;
+        game.bots[0].chips = b1;
+        game.bots[1].chips = b2;
+        game.bots[2].chips = b3;
+        game.bots[3].chips = b4;
+        game.bots[4].chips = b5;
     }
-    for(int i = 0; i < 5; i++){
-        game.bots[i].raiseCount=0;
-    }
-    //need to check if game can still continue - all bots folded or similar situations ->award pot
-    //end ofbetting round - PREFLOP
-    autoPot(&game);
-    drawFrame(&game);//redraw whole frame for convenience
-    //drawing community cards
-    for(int i = 0; i < 3; i++){
-        dealToHand(&game.boardHand, deck, &game.deckTop);
-        communityWindow(&game);
-        _sleep(CARD_TIMER);
-    }
-    game.board.communityCount = 3;
-    game.boardHand.count = 3;
-    //community cards dealt
-    //FLOP
-    while(!allBetOrFolded(&game)){
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded == 0 && game.bots[i].active == 1){
-                gotoxy(3 + ((i-1)*15), 2);
-                printf(" ");
-                gotoxy(1,23);
-
-                fprintf(logfp, "BOT%d logic stats:\n",i+1);
-                botLogic3(&game, i, 1, logfp);
-
-                updateBotWindow(&game, i);
-                communityWindow(&game);
-                gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
-                gotoxy(1,23);
-                _sleep(BOT_TIMER);
-                gotoxy(3 + (i*15), 2);printf(" ");
-            }
-        }
-        gotoxy(3+60,2);printf(" ");
-        inputpl(&game);
-        fprintf(logfp, "Player's choice:%d|CALL/RAISE/ALLIN/FOLD|\n\n",game.playerChoice);
-        PlayerActionExec(game.playerChoice, &game.player, &game.board);
-        playerWindow(&game);
-        communityWindow(&game);
-        int botFolds = 0;
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded){botFolds++;}
-        }
-        if(botFolds == 5){
-            break;
-        }
-    }
-    for(int i = 0; i < 5; i++){
-        game.bots[i].raiseCount=0;
-    }
-    autoPot(&game);
-    drawFrame(&game);
-    dealToHand(&game.boardHand,deck, &game.deckTop);
-    communityWindow(&game);
-    _sleep(CARD_TIMER);
-    game.board.communityCount = 4;
-    game.boardHand.count = 4;
-    //TURN
-    while(!allBetOrFolded(&game)){
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded == 0 && game.bots[i].active == 1){
-                gotoxy(3 + ((i-1)*15), 2);
-                printf(" ");
-                gotoxy(1,23);
-
-                fprintf(logfp, "BOT%d logic stats:\n",i+1);
-                botLogic3(&game, i, 2, logfp);
-
-                updateBotWindow(&game, i);
-                communityWindow(&game);
-                gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
-                gotoxy(1,23);
-                _sleep(BOT_TIMER);
-                gotoxy(3 + (i*15), 2);printf(" ");
-            }
-        }
-        gotoxy(3+60,2);printf(" ");
-        inputpl(&game);
-        fprintf(logfp, "Player's choice:%d|CALL/RAISE/ALLIN/FOLD|\n\n",game.playerChoice);
-        PlayerActionExec(game.playerChoice, &game.player, &game.board);
-        playerWindow(&game);
-        communityWindow(&game);
-        int botFolds = 0;
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded){botFolds++;}
-        }
-        if(botFolds == 5){
-            break;
-        }
-        int largestBet = game.player.bet;
-        for(int i = 0; i <5; i++){
-            if(game.bots[i].bet >= largestBet){
-                largestBet = game.bots[i].bet;
-            }
-        }
-        game.board.minBet = largestBet;
-        
-    }
-    for(int i = 0; i < 5; i++){
-        game.bots[i].raiseCount=0;
-    }
-    autoPot(&game);
-    drawFrame(&game);
-    dealToHand(&game.boardHand, deck, &game.deckTop);
-    communityWindow(&game);
-    _sleep(CARD_TIMER);
-    game.board.communityCount = 5;
-    game.boardHand.count = 5;
-    //RIVER
-    while(!allBetOrFolded(&game)){
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded == 0 && game.bots[i].active == 1){
-                gotoxy(3 + ((i-1)*15), 2);
-                printf(" ");
-                gotoxy(1,23);
-
-                fprintf(logfp, "BOT%d logic stats:\n",i+1);
-                botLogic3(&game, i, 3, logfp);
-
-                updateBotWindow(&game, i);
-                communityWindow(&game);
-                gotoxy(3 + (i*15), 2);ColPrintfBot(">",i);
-                gotoxy(1,23);
-                _sleep(BOT_TIMER);
-                gotoxy(3 + (i*15), 2);printf(" ");
-            }
-        }
-        gotoxy(3+60,2);printf(" ");
-        inputpl(&game);
-        fprintf(logfp, "Player's choice:%d|CALL/RAISE/ALLIN/FOLD|\n\n",game.playerChoice);
-        PlayerActionExec(game.playerChoice, &game.player, &game.board);
-        playerWindow(&game);
-        communityWindow(&game);
-        int botFolds = 0;
-        for(int i = 0; i < 5; i++){
-            if(game.bots[i].folded){botFolds++;}
-        }
-        if(botFolds == 5){
-            break;
-        }
-    }
-    //Evaluation
-    system("cls");
-
-    int playerEval, bot1Eval, bot2Eval, bot3Eval, bot4Eval, bot5Eval;
-    if(game.player.active == 1 && game.player.folded == 0){playerEval = evaluateMain(&game.playerHand, &game.boardHand);}
-    if(game.bots[0].active == 1 && game.bots[0].folded == 0){bot1Eval = evaluateMain(&game.botHands[0], &game.boardHand);}
-    if(game.bots[1].active == 1 && game.bots[1].folded == 0){bot2Eval = evaluateMain(&game.botHands[1], &game.boardHand);}
-    if(game.bots[2].active == 1 && game.bots[2].folded == 0){bot3Eval = evaluateMain(&game.botHands[2], &game.boardHand);}
-    if(game.bots[3].active == 1 && game.bots[3].folded == 0){bot4Eval = evaluateMain(&game.botHands[3], &game.boardHand);}
-    if(game.bots[4].active == 1 && game.bots[4].folded == 0){bot5Eval = evaluateMain(&game.botHands[4], &game.boardHand);}
-    
-    int bestEval = -1;
-    int bestPlayerId = -1;  // 0–4 bots, 5 player
-
-    if (game.player.active == 1 && game.player.folded == 0) {
-        int playerEval = evaluateMain(&game.playerHand, &game.boardHand);
-        if (playerEval > bestEval) {
-            bestEval = playerEval;
-            bestPlayerId = 5;
-        }
-    }
-    for (int i = 0; i < 5; i++) {
-        if (game.bots[i].active == 1 && game.bots[i].folded == 0) {
-            int botEval = evaluateMain(&game.botHands[i], &game.boardHand);
-            if (botEval > bestEval) {
-                bestEval = botEval;
-                bestPlayerId = i;
-            }
-        }
-    }
-    showdownScreen();
-    _sleep(2500);
-    showdownScreenResult(&game, bestPlayerId,bestEval-1);
-    
-    fprintf(logfp, "Winner ID:%d|BestEval ID:%d",bestPlayerId,bestEval);
-    fprintf(logfp,"PLAYER_ID: bots 0-4, player 5\n");
-    fprintf(logfp,"BESTEVAL_ID: HighCard 0 -> RoyalFlush 10\n");
-    fprintf(logfp,"End of Current Log ");
-    log_timestamp(logfp);
-
 
     //end of LOG
     fflush(logfp);

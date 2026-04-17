@@ -30,4 +30,5 @@ void testRound(GAME *g);
 void dealToActivePlayers(GAME *g);
 int allBetOrFolded(GAME *game);
 void autoPot(GAME *g);
+void resetForNextRound(GAME *game);
 #endif

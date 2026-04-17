@@ -25,5 +25,9 @@ void printHand(Hand* hand){
 }
 
 void clearHand(Hand* hand){
+    for(int i = 0; i < hand->count; i++){
+        hand->cards[i].rank = -1;
+        hand->cards[i].suit = -1;
+    }
     hand->count = 0;
 }
