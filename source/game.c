@@ -8,6 +8,7 @@
 #include "evaluate.h"
 
 void initGame(GAME *g){
+    shuffleDeck(deck);
     g->boardHand.name = "Community";
     g->numberOfPlayers = 6;
     g->numberofActive = 6;
@@ -203,4 +204,4 @@ void resetForNextRound(GAME *game){
         clearHand(&game->botHands[i]);
     }
     clearHand(&game->boardHand);
-}
+} 

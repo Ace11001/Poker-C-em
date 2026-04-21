@@ -13,8 +13,8 @@
 #include "bots.h"
 #include "log.h"
 
-#define BOT_TIMER 15
-#define CARD_TIMER 4
+#define BOT_TIMER 15 //time in ms that bots "decide"
+#define CARD_TIMER 4 //time in ms between showing cards
 
 FILE *logfp;
 
@@ -79,10 +79,8 @@ void mainRound(GAME *game){
     for(int i = 0; i < 5; i++){
         game->bots[i].raiseCount=0;
     }
-    //need to check if game can still continue - all bots folded or similar situations ->award pot
-    //end ofbetting round - PREFLOP
     autoPot(game);
-    drawFrame(game);//redraw whole frame for convenience
+    drawFrame(game);
     //drawing community cards
     for(int i = 0; i < 3; i++){
         dealToHand(&game->boardHand, deck, &game->deckTop);
@@ -91,7 +89,6 @@ void mainRound(GAME *game){
     }
     game->board.communityCount = 3;
     game->boardHand.count = 3;
-    //community cards dealt
     //FLOP
     bettingRound(game, 1);
     for(int i = 0; i < 5; i++){
@@ -181,8 +178,8 @@ void mainRound(GAME *game){
     fprintf(logfp,"End of Current Log ");
     log_timestamp(logfp);
 
-
-    _sleep(7500);
+    gotoxy(1,25);
+    system("pause");
 }
 
 
@@ -211,10 +208,9 @@ int main(void){
     log_timestamp(logfp);
     fflush(logfp);
     sizeDemo();
+    //Game Loop
     while(game.player.chips > 0){
-        //Start of round
         mainRound(&game);
-        //end of round new round
         int plc = game.player.chips;
         int b1 = game.bots[0].chips;
         int b2 = game.bots[1].chips;
@@ -222,7 +218,14 @@ int main(void){
         int b4 = game.bots[3].chips;
         int b5 = game.bots[4].chips;
         system("cls");
+        gotoxy(17,3);
         printf("Do you want to play again(0-no, 1-yes): ");
+        gotoxy(15,4);
+        printf("Quitting will end this session and chips will be reset");
+        gotoxy(24,5);
+        printf("You currently have %d chips", plc);
+        gotoxy(56,3);
+
         int endChoice;
         scanf("%d", &endChoice);
         if(endChoice == 0){
